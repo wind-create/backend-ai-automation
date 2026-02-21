@@ -1,0 +1,47 @@
+{
+  "name": "Excel Decision Workflow",
+  "version": "1.0",
+
+  "settings": {
+    "default_delay": 0.3,
+    "failsafe": true
+  },
+
+  "variables": {},
+
+  "steps": [
+    { "id": 1, "action": "focus_window", "target": "EXCEL" },
+    { "id": 2, "action": "hotkey", "keys": ["ctrl", "home"] },
+    { "id": 3, "action": "press_key", "key": "down" },
+
+    { "id": 4, "action": "copy", "save_as": "user_id" },
+    { "id": 5, "action": "press_key", "key": "right" },
+    { "id": 6, "action": "copy", "save_as": "nominal" },
+
+    {
+      "id": 7,
+      "action": "if",
+      "condition": "nominal > 500000",
+      "then": [
+        { "action": "set_var", "name": "status", "value": "HOLD" }
+      ],
+      "else": [
+        { "action": "set_var", "name": "status", "value": "APPROVE" }
+      ]
+    },
+
+    { "id": 8, "action": "press_key", "key": "right" },
+    { "id": 9, "action": "type_text", "value": "{status}" },
+
+    { "id": 10, "action": "press_key", "key": "down" },
+    { "id": 11, "action": "press_key", "key": "left" },
+    { "id": 12, "action": "press_key", "key": "left" },
+
+    {
+      "id": 13,
+      "action": "loop",
+      "times": 10,
+      "from_step": 4
+    }
+  ]
+}
