@@ -19,7 +19,8 @@ public class BrainLogicService {
     }
 
     public BrainLogic findById(Long id) {
-        return brainLogicRepository.findById(id).orElseThrow();
+        return brainLogicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BrainLogic not found"));
     }
 
     public BrainLogic create(BrainLogic brain) {
@@ -29,7 +30,9 @@ public class BrainLogicService {
     }
 
     public BrainLogic update(Long id, BrainLogic req) {
-        BrainLogic brain = brainLogicRepository.findById(id).orElseThrow();
+
+        BrainLogic brain = brainLogicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BrainLogic not found"));
 
         brain.setName(req.getName());
         brain.setScriptContent(req.getScriptContent());
@@ -41,6 +44,11 @@ public class BrainLogicService {
     }
 
     public void delete(Long id) {
+
+        if (!brainLogicRepository.existsById(id)) {
+            throw new RuntimeException("BrainLogic not found");
+        }
+
         brainLogicRepository.deleteById(id);
     }
 }

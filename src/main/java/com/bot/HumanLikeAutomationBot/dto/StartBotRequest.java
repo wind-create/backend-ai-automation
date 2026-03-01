@@ -6,5 +6,6 @@ import lombok.Data;
 public class StartBotRequest {
     private Long workflowId;
     private Long brainId;
+    private Long actionScriptId;
     private String machineName;
 }

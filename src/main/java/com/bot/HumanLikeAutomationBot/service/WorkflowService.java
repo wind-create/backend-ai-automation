@@ -19,7 +19,8 @@ public class WorkflowService {
     }
 
     public Workflow findById(Long id) {
-        return workflowRepository.findById(id).orElseThrow();
+        return workflowRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Workflow not found"));
     }
 
     public Workflow create(Workflow workflow) {
@@ -29,7 +30,9 @@ public class WorkflowService {
     }
 
     public Workflow update(Long id, Workflow req) {
-        Workflow wf = workflowRepository.findById(id).orElseThrow();
+
+        Workflow wf = workflowRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Workflow not found"));
 
         wf.setName(req.getName());
         wf.setJsonDefinition(req.getJsonDefinition());
@@ -41,6 +44,11 @@ public class WorkflowService {
     }
 
     public void delete(Long id) {
+
+        if (!workflowRepository.existsById(id)) {
+            throw new RuntimeException("Workflow not found");
+        }
+
         workflowRepository.deleteById(id);
     }
 }

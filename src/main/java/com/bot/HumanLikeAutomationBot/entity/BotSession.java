@@ -19,6 +19,7 @@ public class BotSession {
 
     private Long workflowId;
     private Long brainId;
+    private Long actionScriptId;
 
     private String status; // RUNNING / STOPPED / ERROR
 

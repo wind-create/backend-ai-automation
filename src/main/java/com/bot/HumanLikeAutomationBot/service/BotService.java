@@ -2,6 +2,7 @@ package com.bot.HumanLikeAutomationBot.service;
 
 import com.bot.HumanLikeAutomationBot.dto.StartBotRequest;
 import com.bot.HumanLikeAutomationBot.entity.BotSession;
+import com.bot.HumanLikeAutomationBot.repository.ActionScriptRepository;
 import com.bot.HumanLikeAutomationBot.repository.BotSessionRepository;
 import com.bot.HumanLikeAutomationBot.repository.WorkflowRepository;
 import com.bot.HumanLikeAutomationBot.repository.BrainLogicRepository;
@@ -18,68 +19,97 @@ public class BotService {
     private final BotSessionRepository botSessionRepository;
     private final WorkflowRepository workflowRepository;
     private final BrainLogicRepository brainLogicRepository;
+    private final ActionScriptRepository actionScriptRepository;
 
     public BotSession startBot(StartBotRequest req) {
 
-        // ==============================
-        // 1. CEK BOT RUNNING
-        // ==============================
-        botSessionRepository.findByStatus("RUNNING")
-                .ifPresent(s -> {
-                    throw new RuntimeException("Bot already running");
-                });
+    // 🔥 Cek apakah ada bot RUNNING
+    botSessionRepository.findByStatus("RUNNING")
+            .ifPresent(s -> {
+                throw new RuntimeException("Bot already running");
+            });
 
-        // ==============================
-        // 2. AMBIL WORKFLOW & BRAIN
-        // ==============================
-        var workflow = workflowRepository.findById(req.getWorkflowId())
-                .orElseThrow(() -> new RuntimeException("Workflow not found"));
+    var workflow = workflowRepository.findById(req.getWorkflowId())
+            .orElseThrow(() -> new RuntimeException("Workflow not found"));
 
-        var brain = brainLogicRepository.findById(req.getBrainId())
-                .orElseThrow(() -> new RuntimeException("Brain not found"));
+    var brain = brainLogicRepository.findById(req.getBrainId())
+            .orElseThrow(() -> new RuntimeException("Brain not found"));
 
-        // ==============================
-        // 3. BUAT SESSION RUNNING
-        // ==============================
-        BotSession session = BotSession.builder()
-                .workflowId(workflow.getId())
-                .brainId(brain.getId())
-                .status("RUNNING")
-                .startTime(LocalDateTime.now())
-                .machineName(req.getMachineName() == null ? "LOCAL-PC" : req.getMachineName())
-                .build();
+    var action = actionScriptRepository.findById(req.getActionScriptId())
+            .orElseThrow(() -> new RuntimeException("ActionScript not found"));
 
-        session = botSessionRepository.save(session);
+    BotSession session = BotSession.builder()
+            .workflowId(workflow.getId())
+            .brainId(brain.getId())
+            .actionScriptId(action.getId())   // ⭐ simpan di session
+            .status("RUNNING")
+            .startTime(LocalDateTime.now())
+            .machineName(req.getMachineName() == null ? "LOCAL-PC" : req.getMachineName())
+            .build();
 
-        // ==============================
-        // 4. START PYTHON
-        // ==============================
-        botRunnerService.startPython(
-        workflow,
-        brain,
-        this::handleProcessStopped   // 🔥 callback method reference
-);
+    session = botSessionRepository.save(session);
 
-        return session;
-    }
+    Long sessionId = session.getId();
 
-    // ==============================
-    // 🔥 CALLBACK DARI RUNNER
-    // ==============================
-    public void handleProcessStopped(int exitCode) {
+    System.out.println("Starting BOT session: " + sessionId);
 
-        botSessionRepository.findByStatus("RUNNING")
+    botRunnerService.startPython(
+            sessionId,
+            workflow,
+            brain,
+            action,  // ⭐ kirim action ke runner
+            (exitCode) -> handleProcessStopped(sessionId, exitCode)
+    );
+
+    return session;
+}
+
+    // =========================================
+    // 🔥 DIPANGGIL JIKA PYTHON SELESAI / CMD DITUTUP
+    // =========================================
+    public void handleProcessStopped(Long sessionId, int exitCode) {
+
+        botSessionRepository.findById(sessionId)
                 .ifPresent(session -> {
 
-                    if(exitCode == 0){
+                    // Jangan overwrite jika sudah STOP manual
+                    if (!"RUNNING".equals(session.getStatus())) {
+                        return;
+                    }
+
+                    if (exitCode == 0) {
                         session.setStatus("STOPPED");
-                    }else{
+                    } else {
                         session.setStatus("ERROR");
                     }
 
                     session.setEndTime(LocalDateTime.now());
 
                     botSessionRepository.save(session);
+
+                    System.out.println("Session " + sessionId + " finished with status: " + session.getStatus());
                 });
+    }
+
+    // =========================================
+    // 🔥 STOP MANUAL
+    // =========================================
+    public void stopBot(Long sessionId) {
+
+        BotSession session = botSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (!"RUNNING".equals(session.getStatus())) {
+            throw new RuntimeException("Bot is not running");
+        }
+
+        System.out.println("Stopping BOT session: " + sessionId);
+
+        botRunnerService.stopPython(sessionId);
+
+        session.setStatus("STOPPED");
+        session.setEndTime(LocalDateTime.now());
+
+        botSessionRepository.save(session);
     }
 }
