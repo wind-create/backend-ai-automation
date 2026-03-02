@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -112,4 +113,27 @@ public class BotService {
 
         botSessionRepository.save(session);
     }
+
+    // =========================================
+// 🔥 LIST ALL SESSIONS
+// =========================================
+public List<BotSession> getAllSessions() {
+    return botSessionRepository.findAll();
+}
+
+// =========================================
+// 🔥 GET SESSION BY ID
+// =========================================
+public BotSession getSessionById(Long sessionId) {
+    return botSessionRepository.findById(sessionId)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+}
+
+// =========================================
+// 🔥 GET ACTIVE (RUNNING) SESSION
+// =========================================
+public BotSession getActiveSession() {
+    return botSessionRepository.findByStatus("RUNNING")
+            .orElseThrow(() -> new RuntimeException("No active session"));
+}
 }
