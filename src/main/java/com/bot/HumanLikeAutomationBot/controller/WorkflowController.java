@@ -3,12 +3,15 @@ package com.bot.HumanLikeAutomationBot.controller;
 import com.bot.HumanLikeAutomationBot.entity.Workflow;
 import com.bot.HumanLikeAutomationBot.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/workflows")
+@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 @RequiredArgsConstructor
 public class WorkflowController {
 

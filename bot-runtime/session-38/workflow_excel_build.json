@@ -1,0 +1,53 @@
+{
+  "name": "Excel Build Data Workflow",
+  "version": "1.0",
+
+  "settings": {
+    "default_delay": 0.3,
+    "dry_run": false,
+    "failsafe": true
+  },
+
+  "variables": {
+    "counter": 1
+  },
+
+  "steps": [
+    { "id": 1, "action": "focus_window", "target": "EXCEL" },
+    { "id": 2, "action": "hotkey", "keys": ["ctrl", "home"] },
+    { "id": 3, "action": "press_key", "key": "down" },
+
+    {
+      "id": 4,
+      "action": "type_text",
+      "value": "USER_{counter}"
+    },
+    { "id": 5, "action": "press_key", "key": "right" },
+    {
+      "id": 6,
+      "action": "type_text",
+      "value": "{counter}00000"
+    },
+
+    { "id": 7, "action": "press_key", "key": "right" },
+    { "id": 8, "action": "type_text", "value": "" },
+
+    { "id": 9, "action": "press_key", "key": "down" },
+    { "id": 10, "action": "press_key", "key": "left" },
+    { "id": 11, "action": "press_key", "key": "left" },
+
+    {
+      "id": 12,
+      "action": "set_var",
+      "name": "counter",
+      "value": "{counter + 1}"
+    },
+
+    {
+      "id": 13,
+      "action": "loop",
+      "times": 10,
+      "from_step": 4
+    }
+  ]
+}

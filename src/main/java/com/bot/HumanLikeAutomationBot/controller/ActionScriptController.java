@@ -3,6 +3,8 @@ package com.bot.HumanLikeAutomationBot.controller;
 import com.bot.HumanLikeAutomationBot.entity.ActionScript;
 import com.bot.HumanLikeAutomationBot.service.ActionScriptService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/actions")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 public class ActionScriptController {
 
     private final ActionScriptService actionScriptService;

@@ -42,7 +42,7 @@ public class BotRunnerService {
             String basePath = "bot-runtime/session-" + sessionId + "/";
             new File(basePath).mkdirs();
 
-            try(FileWriter fw = new FileWriter(basePath + "workflow.json")){
+            try(FileWriter fw = new FileWriter(basePath + "workflow_excel_build.json")){
                 fw.write(workflow.getJsonDefinition());
             }
 
